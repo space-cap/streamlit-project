@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Show title and description.
 st.title("💬 Assignment 6")
@@ -23,4 +23,24 @@ if not google_api_key:
     st.info("Please add your Google API key to continue.", icon="🗝️")
 else:
     st.write("key ok")
+    
+    # LLM 초기화
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash", 
+        temperature=0.1,
+        api_key=google_api_key,
+    )
+
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    response = llm.invoke("대한민국의 수도는?")
+    with st.chat_message("ai"):
+        st.markdown(response.content)
+        
+
 
