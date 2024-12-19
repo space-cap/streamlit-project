@@ -10,7 +10,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.storage import InMemoryStore
 import tempfile
-
+import os
 
 st.set_page_config(
     page_title="DocumentGPT",
@@ -74,8 +74,15 @@ def embed_file(file):
 
 @st.cache_data(show_spinner="Embedding file...")
 def embed_file_from_cloud(file):
-    bytes_data = file.getvalue()
-    st.write(bytes_data)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # 임시 파일 경로 생성
+        temp_file_path = os.path.join(temp_dir, file.name)
+        
+        # 임시 파일에 내용 쓰기
+        with open(temp_file_path, "wb") as temp_file:
+            temp_file.write(file.getbuffer())
+        
+        st.write(f"임시 파일 경로: {temp_file_path}")
 
 
 
