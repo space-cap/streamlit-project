@@ -1,6 +1,12 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.document_loaders import TextLoader
+from langchain.storage import LocalFileStore
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import CacheBackedEmbeddings
+from langchain_community.vectorstores import FAISS
+
 
 st.set_page_config(
     page_title="DocumentGPT",
