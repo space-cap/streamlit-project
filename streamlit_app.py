@@ -139,7 +139,7 @@ with st.sidebar:
 
 
 if file:
-    retriever = embed_file(file)
+    retriever = embed_file_from_cloud(file)
     send_message("I'm ready! Ask away!", "ai", save=False)
     paint_history()
     message = st.chat_input("Ask anything about your file...")
