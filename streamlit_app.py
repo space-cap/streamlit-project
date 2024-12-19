@@ -7,6 +7,7 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import ChatPromptTemplate
+from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 
 
 st.set_page_config(
@@ -40,6 +41,12 @@ else:
     st.write("key ok")
 
 
+# LLM 초기화
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash", 
+    temperature=0.1,
+    api_key=google_api_key,
+)
 
 
 @st.cache_resource(show_spinner="Embedding file...")
@@ -97,29 +104,33 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
+
 with st.sidebar:
     file = st.file_uploader(
         "Upload a .txt file",
         type=["txt"],
     )
 
-# LLM 초기화
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash", 
-    temperature=0.1,
-    api_key=google_api_key,
-)
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-response = llm.invoke("대한민국의 수도는?")
-with st.chat_message("ai"):
-    st.markdown(response.content)
+if file:
+    retriever = embed_file(file)
+    send_message("I'm ready! Ask away!", "ai", save=False)
+    paint_history()
+    message = st.chat_input("Ask anything about your file...")
+    if message:
+        send_message(message, "human")
+        chain = (
+            {
+                "context": retriever | RunnableLambda(format_docs),
+                "question": RunnablePassthrough(),
+            }
+            | prompt
+            | llm
+        )
+        response = chain.invoke(message)
+        send_message(response.content, "ai")
+else:
+    st.session_state["messages"] = []
 
 
 
