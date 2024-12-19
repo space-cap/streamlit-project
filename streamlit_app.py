@@ -1,7 +1,11 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-# Show title and description.
+st.set_page_config(
+    page_title="DocumentGPT",
+    page_icon="📃",
+)
+
 st.title("💬 Assignment 6")
 
 st.markdown("""
@@ -13,6 +17,8 @@ st.markdown("""
 ---
 """)
 
+
+
 st.markdown("""
 구글 키 가지고 오기
 https://aistudio.google.com/apikey
@@ -21,6 +27,7 @@ https://aistudio.google.com/apikey
 google_api_key = st.text_input("Google API Key", type="password")
 if not google_api_key:
     st.info("Please add your Google API key to continue.", icon="🗝️")
+    st.stop()
 else:
     st.write("key ok")
     
@@ -41,6 +48,6 @@ else:
     response = llm.invoke("대한민국의 수도는?")
     with st.chat_message("ai"):
         st.markdown(response.content)
-        
+
 
 
