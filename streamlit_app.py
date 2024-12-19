@@ -96,6 +96,7 @@ def embed_file_from_cloud(file):
         loader = TextLoader(temp_file_path)
 
         docs = loader.load_and_split(text_splitter=splitter)
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 
 
