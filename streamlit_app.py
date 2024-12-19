@@ -72,27 +72,11 @@ def embed_file(file):
     return retriever
 
 
-
+@st.cache_data(show_spinner="Embedding file...")
 def embed_file_from_cloud(file):
-    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-        tmp_file.write(file.getvalue())
-        file_path = tmp_file.name
-        
-        # 메모리 내 저장소 사용
-        cache_dir = InMemoryStore()
+    bytes_data = file.getvalue()
+    st.write(bytes_data)
 
-        splitter = CharacterTextSplitter.from_tiktoken_encoder(
-            separator="\n",
-            chunk_size=600,
-            chunk_overlap=100,
-        )
-        loader = TextLoader(file_path)
-        docs = loader.load_and_split(text_splitter=splitter)
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-        cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
-        vectorstore = FAISS.from_documents(docs, cached_embeddings)
-        retriever = vectorstore.as_retriever()
-        return retriever
 
 
 
@@ -141,20 +125,7 @@ with st.sidebar:
 if file:
     retriever = embed_file_from_cloud(file)
     send_message("I'm ready! Ask away!", "ai", save=False)
-    paint_history()
-    message = st.chat_input("Ask anything about your file...")
-    if message:
-        send_message(message, "human")
-        chain = (
-            {
-                "context": retriever | RunnableLambda(format_docs),
-                "question": RunnablePassthrough(),
-            }
-            | prompt
-            | llm
-        )
-        response = chain.invoke(message)
-        send_message(response.content, "ai")
+    
 else:
     st.session_state["messages"] = []
 
