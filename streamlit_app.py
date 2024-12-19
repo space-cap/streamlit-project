@@ -13,4 +13,14 @@ st.markdown("""
 ---
 """)
 
+st.markdown("""
+구글 키 가지고 오기
+https://aistudio.google.com/apikey
+""")
+
+google_api_key = st.text_input("Google API Key", type="password")
+if not google_api_key:
+    st.info("Please add your Google API key to continue.", icon="🗝️")
+else:
+    st.write("key ok")
 
