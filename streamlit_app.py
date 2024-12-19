@@ -93,6 +93,8 @@ def embed_file_from_cloud(file):
             chunk_overlap=100,
         )
 
+        loader = TextLoader(temp_file_path)
+
 
 
 
