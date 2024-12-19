@@ -6,6 +6,7 @@ from langchain.storage import LocalFileStore
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain.prompts import ChatPromptTemplate
 
 
 st.set_page_config(
@@ -62,6 +63,45 @@ def embed_file(file):
     return retriever
 
 
+def send_message(message, role, save=True):
+    with st.chat_message(role):
+        st.markdown(message)
+    if save:
+        st.session_state["messages"].append({"message": message, "role": role})
+
+
+def paint_history():
+    for message in st.session_state["messages"]:
+        send_message(
+            message["message"],
+            message["role"],
+            save=False,
+        )
+
+
+def format_docs(docs):
+    return "\n\n".join(document.page_content for document in docs)
+
+
+prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """
+            Answer the question using ONLY the following context. If you don't know the answer just say you don't know. DON'T make anything up.
+            
+            Context: {context}
+            """,
+        ),
+        ("human", "{question}"),
+    ]
+)
+
+with st.sidebar:
+    file = st.file_uploader(
+        "Upload a .txt file",
+        type=["txt"],
+    )
 
 # LLM 초기화
 llm = ChatGoogleGenerativeAI(
