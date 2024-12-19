@@ -87,7 +87,11 @@ def embed_file_from_cloud(file):
         # 메모리 내 저장소 사용
         cache_dir = InMemoryStore()
 
-        
+        splitter = CharacterTextSplitter.from_tiktoken_encoder(
+            separator="\n",
+            chunk_size=600,
+            chunk_overlap=100,
+        )
 
 
 
