@@ -72,7 +72,7 @@ def embed_file(file):
     return retriever
 
 
-@st.cache_data(show_spinner="Embedding file...")
+
 def embed_file_from_cloud(file):
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
         tmp_file.write(file.getvalue())
