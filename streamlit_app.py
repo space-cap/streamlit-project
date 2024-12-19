@@ -8,6 +8,8 @@ from langchain.embeddings import CacheBackedEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
+from langchain.storage import InMemoryStore
+import tempfile
 
 
 st.set_page_config(
@@ -68,6 +70,30 @@ def embed_file(file):
     vectorstore = FAISS.from_documents(docs, cached_embeddings)
     retriever = vectorstore.as_retriever()
     return retriever
+
+
+@st.cache_resource(show_spinner="Embedding file...")
+def embed_file_from_cloud(file):
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_file.write(file.getvalue())
+        file_path = tmp_file.name
+        
+        # 메모리 내 저장소 사용
+        cache_dir = InMemoryStore()
+
+        splitter = CharacterTextSplitter.from_tiktoken_encoder(
+            separator="\n",
+            chunk_size=600,
+            chunk_overlap=100,
+        )
+        loader = TextLoader(file_path)
+        docs = loader.load_and_split(text_splitter=splitter)
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+        vectorstore = FAISS.from_documents(docs, cached_embeddings)
+        retriever = vectorstore.as_retriever()
+        return retriever
+
 
 
 def send_message(message, role, save=True):
