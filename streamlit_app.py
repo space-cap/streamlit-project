@@ -187,6 +187,9 @@ else:
 
     # 문제 및 선택지 표시
     with st.form("questions_form"):
+        success = 0
+        quiz_total_count = len(questions_json["questions"])
+
         for question in questions_json["questions"]:
             st.write(question["question"])
             value = st.radio(
@@ -196,8 +199,13 @@ else:
             )
             if {"answer": value, "correct": True} in question["answers"]:
                 st.success("Correct!")
+                success += 1
             elif value is not None:
                 st.error("Wrong!")
+                
+        if success == quiz_total_count:
+            st.balloons()
+
         button = st.form_submit_button()
 
 
