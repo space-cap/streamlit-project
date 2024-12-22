@@ -4,9 +4,11 @@ from langchain.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.retrievers import WikipediaRetriever
 from langchain.schema import BaseOutputParser, output_parser
+from langchain.storage import InMemoryStore
 import streamlit as st
 import json
 import os
+import tempfile
 
 
 st.set_page_config(
@@ -81,6 +83,29 @@ def split_file(file):
     return docs
 
 
+@st.cache_resource(show_spinner="Loading file...")
+def split_file_cloud(file):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # 임시 파일 경로 생성
+        temp_file_path = os.path.join(temp_dir, file.name)
+        
+        # 임시 파일에 내용 쓰기
+        with open(temp_file_path, "wb") as temp_file:
+            temp_file.write(file.getbuffer())
+        
+        st.write(f"임시 파일 경로: {temp_file_path}")
+
+        # 메모리 내 저장소 사용
+        cache_dir = InMemoryStore()
+        
+        loader = UnstructuredFileLoader(temp_file_path)
+        documents = loader.load()
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        docs = text_splitter.split_documents(documents)
+        return docs
+
+
+
 @st.cache_resource(show_spinner="Searching Wikipedia...")
 def wiki_search(term):
     retriever = WikipediaRetriever(top_k_results=5)
@@ -121,7 +146,7 @@ with st.sidebar:
             type=["pdf", "txt", "docx"],
         )
         if file:
-            docs = split_file(file)
+            docs = split_file_cloud(file)
     else:
         topic = st.text_input("Search Wikipedia...")
         if topic:
