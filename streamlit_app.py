@@ -145,8 +145,8 @@ with st.sidebar:
     )
     if choice == "File":
         file = st.file_uploader(
-            "Upload a .docx , .txt or .pdf file",
-            type=["pdf", "txt", "docx"],
+            "Upload a .txt file",
+            type=["txt"],
         )
         if file:
             docs = split_file_cloud(file)
