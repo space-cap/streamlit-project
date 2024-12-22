@@ -1,6 +1,6 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.document_loaders import UnstructuredFileLoader
+from langchain.document_loaders import TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.retrievers import WikipediaRetriever
 from langchain.schema import BaseOutputParser, output_parser
@@ -76,7 +76,7 @@ def split_file(file):
     with open(file_path, "wb") as f:
         f.write(file_content)
     
-    loader = UnstructuredFileLoader(file_path)
+    loader = TextLoader(file_path)
     documents = loader.load()
     text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     docs = text_splitter.split_documents(documents)
@@ -98,7 +98,7 @@ def split_file_cloud(file):
         # 메모리 내 저장소 사용
         cache_dir = InMemoryStore()
         
-        loader = UnstructuredFileLoader(temp_file_path)
+        loader = TextLoader(temp_file_path)
         documents = loader.load()
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         docs = text_splitter.split_documents(documents)
