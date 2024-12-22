@@ -7,3 +7,4 @@ openai
 langchain-openai 
 langchain-google-genai
 faiss-cpu
+python-magic-bin
