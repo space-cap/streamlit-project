@@ -31,7 +31,7 @@ st.sidebar를 사용하여 Streamlit app의 코드와 함께 Github 리포지토
 """)
 
 
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.1,)
+
 
 template = """
 다음 텍스트를 기반으로 4지선다형 문제 10개를 만들어주세요:
@@ -128,8 +128,18 @@ def run_quiz_chain(_docs, topic):
 
 
 with st.sidebar:
+    st.markdown("""
+    구글 키 가지고 오기
+    https://aistudio.google.com/apikey
+    """)
+    
     # API Key 입력
-    openai_api_key = st.text_input("Input your OpenAI API Key")
+    google_api_key = st.text_input("Input your Google API Key", type="password")
+    if not google_api_key:
+        st.info("Please add your Google API key to continue.", icon="🗝️")
+        st.stop()
+    else:
+        st.write("key ok")
 
     docs = None
     topic = None
@@ -151,3 +161,12 @@ with st.sidebar:
         topic = st.text_input("Search Wikipedia...")
         if topic:
             docs = wiki_search(topic)
+
+
+# LLM 초기화
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash", 
+    temperature=0.1,
+    api_key=google_api_key,
+)
+
