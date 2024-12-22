@@ -122,9 +122,8 @@ def run_quiz_chain(_docs, topic):
 
 with st.sidebar:
     st.markdown("""
-        소스 코드
-        https://github.com/space-cap/streamlit-project/blob/main/streamlit_app.py
-                
+    소스 코드
+    https://github.com/space-cap/streamlit-project/blob/main/streamlit_app.py
     """)
     
     st.markdown("""
