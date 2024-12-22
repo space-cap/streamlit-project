@@ -124,7 +124,7 @@ with st.sidebar:
     st.markdown("""
     소스 코드
                 
-    https://github.com/space-cap/streamlit-project/blob/main/streamlit_app.py
+    https://github.com/space-cap/streamlit-project/blob/main/n03_QuizGPT_app.py
     """)
     
     st.markdown("""
