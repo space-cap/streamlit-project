@@ -19,7 +19,7 @@ st.set_page_config(
 st.title("💬 Assignment 7")
 
 st.markdown("""
-QuizGPT를 구현하되 다음 기능을 추가합니다:
+QuizGPT
 
 """)
 
