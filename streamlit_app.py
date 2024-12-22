@@ -1,170 +1,128 @@
-import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain.document_loaders import TextLoader
-from langchain.storage import LocalFileStore
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import CacheBackedEmbeddings
-from langchain_community.vectorstores import FAISS
 from langchain.prompts import ChatPromptTemplate
-from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
-from langchain.storage import InMemoryStore
-import tempfile
+from langchain.document_loaders import UnstructuredFileLoader
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.retrievers import WikipediaRetriever
+from langchain.schema import BaseOutputParser, output_parser
+import streamlit as st
+import json
 import os
 
+
 st.set_page_config(
-    page_title="DocumentGPT",
-    page_icon="📃",
+    page_title="QuizGPT",
+    page_icon="❓",
 )
 
-st.title("💬 Assignment 6")
+st.title("💬 Assignment 7")
 
 st.markdown("""
-1. Migrate the RAG pipeline you implemented in the previous assignments to Streamlit.
-2. Implement file upload and chat history.
-3. Allow the user to use its own OpenAI API Key:
-   - Load it from an `st.input` inside of `st.sidebar`.
-4. Using `st.sidebar`, put a link to the Github repo with the code of your Streamlit app.
+QuizGPT를 구현하되 다음 기능을 추가합니다:
+
+함수 호출을 사용합니다.
+유저가 시험의 난이도를 커스터마이징 할 수 있도록 하고 LLM이 어려운 문제 또는 쉬운 문제를 생성하도록 합니다.
+만점이 아닌 경우 유저가 시험을 다시 치를 수 있도록 허용합니다.
+만점이면 st.ballons를 사용합니다.
+유저가 자체 OpenAI API 키를 사용하도록 허용하고, st.sidebar 내부의 st.input에서 로드합니다.
+st.sidebar를 사용하여 Streamlit app의 코드와 함께 Github 리포지토리에 링크를 넣습니다.
 ---
 """)
 
 
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.1,)
 
-st.markdown("""
-구글 키 가지고 오기
-https://aistudio.google.com/apikey
-""")
+template = """
+다음 텍스트를 기반으로 4지선다형 문제 10개를 만들어주세요:
 
-google_api_key = st.text_input("Google API Key", type="password")
-if not google_api_key:
-    st.info("Please add your Google API key to continue.", icon="🗝️")
-    st.stop()
-else:
-    st.write("key ok")
+{text}
+
+문제와 답변을 다음 JSON 형식으로 제공해주세요:
+{{ "questions": [
+            {{
+                "question": "What is the color of the ocean?",
+                "answers": [
+                        {{
+                            "answer": "Red",
+                            "correct": false
+                        }},
+                        {{
+                            "answer": "Yellow",
+                            "correct": false
+                        }},
+                        {{
+                            "answer": "Green",
+                            "correct": false
+                        }},
+                        {{
+                            "answer": "Blue",
+                            "correct": true
+                        }},
+                ]
+            }},
+        ...
+    ]
+}}
+"""
+
+prompt = ChatPromptTemplate.from_template(template)
 
 
-# LLM 초기화
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash", 
-    temperature=0.1,
-    api_key=google_api_key,
-)
-
-
-@st.cache_resource(show_spinner="Embedding file...")
-def embed_file(file):
+@st.cache_resource(show_spinner="Loading file...")
+def split_file(file):
     file_content = file.read()
-    file_path = f"./.cache/files/{file.name}"
+    file_path = f"./.cache/quiz_files/{file.name}"
     with open(file_path, "wb") as f:
         f.write(file_content)
-    cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
-    splitter = CharacterTextSplitter.from_tiktoken_encoder(
-        separator="\n",
-        chunk_size=600,
-        chunk_overlap=100,
-    )
-    loader = TextLoader(file_path)
-    docs = loader.load_and_split(text_splitter=splitter)
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
-    vectorstore = FAISS.from_documents(docs, cached_embeddings)
-    retriever = vectorstore.as_retriever()
-    return retriever
+    
+    loader = UnstructuredFileLoader(file_path)
+    documents = loader.load()
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    docs = text_splitter.split_documents(documents)
+    return docs
 
 
-@st.cache_resource(show_spinner="Embedding file...")
-def embed_file_from_cloud(file):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # 임시 파일 경로 생성
-        temp_file_path = os.path.join(temp_dir, file.name)
-        
-        # 임시 파일에 내용 쓰기
-        with open(temp_file_path, "wb") as temp_file:
-            temp_file.write(file.getbuffer())
-        
-        st.write(f"임시 파일 경로: {temp_file_path}")
-
-        # 메모리 내 저장소 사용
-        cache_dir = InMemoryStore()
-
-        splitter = CharacterTextSplitter.from_tiktoken_encoder(
-            separator="\n",
-            chunk_size=600,
-            chunk_overlap=100,
-        )
-
-        loader = TextLoader(temp_file_path)
-        docs = loader.load_and_split(text_splitter=splitter)
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001",google_api_key=google_api_key)
-        cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
-        vectorstore = FAISS.from_documents(docs, cached_embeddings)
-        retriever = vectorstore.as_retriever()
-        return retriever
+@st.cache_resource(show_spinner="Searching Wikipedia...")
+def wiki_search(term):
+    retriever = WikipediaRetriever(top_k_results=5)
+    docs = retriever.get_relevant_documents(term)
+    return docs
 
 
-
-
-def send_message(message, role, save=True):
-    with st.chat_message(role):
-        st.markdown(message)
-    if save:
-        st.session_state["messages"].append({"message": message, "role": role})
-
-
-def paint_history():
-    for message in st.session_state["messages"]:
-        send_message(
-            message["message"],
-            message["role"],
-            save=False,
-        )
-
-
-def format_docs(docs):
-    return "\n\n".join(document.page_content for document in docs)
-
-
-prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            """
-            Answer the question using ONLY the following context. If you don't know the answer just say you don't know. DON'T make anything up.
-            
-            Context: {context}
-            """,
-        ),
-        ("human", "{question}"),
-    ]
-)
+@st.cache_resource(show_spinner="Making quiz...")
+def run_quiz_chain(_docs, topic):
+    # 전체 텍스트 결합
+    full_text = " ".join([doc.page_content for doc in docs])
+    
+    # LLM을 사용하여 문제 생성
+    response = llm.invoke(prompt.format(text=full_text))
+    cleaned_string = response.content.replace('```', '').replace('json', '', 1).strip()
+    
+    # JSON 파싱
+    questions_json = json.loads(cleaned_string)
+    return questions_json
 
 
 with st.sidebar:
-    file = st.file_uploader(
-        "Upload a .txt file",
-        type=["txt"],
+    # API Key 입력
+    openai_api_key = st.text_input("Input your OpenAI API Key")
+
+    docs = None
+    topic = None
+    choice = st.selectbox(
+        "Choose what you want to use.",
+        (
+            "File",
+            "Wikipedia Article",
+        ),
     )
-
-
-if file:
-    retriever = embed_file_from_cloud(file)
-    send_message("I'm ready! Ask away!", "ai", save=False)
-    paint_history()
-    message = st.chat_input("Ask anything about your file...")
-    if message:
-        send_message(message, "human")
-        chain = (
-            {
-                "context": retriever | RunnableLambda(format_docs),
-                "question": RunnablePassthrough(),
-            }
-            | prompt
-            | llm
+    if choice == "File":
+        file = st.file_uploader(
+            "Upload a .docx , .txt or .pdf file",
+            type=["pdf", "txt", "docx"],
         )
-        response = chain.invoke(message)
-        send_message(response.content, "ai")
-else:
-    st.session_state["messages"] = []
-
-
-
+        if file:
+            docs = split_file(file)
+    else:
+        topic = st.text_input("Search Wikipedia...")
+        if topic:
+            docs = wiki_search(topic)
