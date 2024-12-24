@@ -8,30 +8,25 @@ from langchain.prompts import ChatPromptTemplate
 import streamlit as st
 
 
-
-with st.sidebar:
-  
-    st.markdown("""
-    구글 키 가지고 오기
-                
-    https://aistudio.google.com/apikey
-    """)
-    
-    # API Key 입력
-    google_api_key = st.text_input("Input your Google API Key", type="password")
-    if not google_api_key:
-        st.info("Please add your Google API key to continue.", icon="🗝️")
-        st.stop()
-    else:
-        st.write("key ok")
-
-
-
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash", 
-    temperature=0.1,
-    api_key=google_api_key,
+st.set_page_config(
+    page_title="SiteGPT",
+    page_icon="🖥️",
 )
+
+
+st.markdown(
+    """
+    # SiteGPT
+            
+    Ask questions about the content of a website.
+            
+    Start by writing the URL of the website on the sidebar.
+"""
+)
+
+
+
+
 
 answers_prompt = ChatPromptTemplate.from_template(
     """
@@ -159,28 +154,36 @@ def load_website(url):
     return vector_store.as_retriever()
 
 
-st.set_page_config(
-    page_title="SiteGPT",
-    page_icon="🖥️",
-)
-
-
-st.markdown(
-    """
-    # SiteGPT
-            
-    Ask questions about the content of a website.
-            
-    Start by writing the URL of the website on the sidebar.
-"""
-)
 
 
 with st.sidebar:
+  
+    st.markdown("""
+    구글 키 가지고 오기
+                
+    https://aistudio.google.com/apikey
+    """)
+    
+    # API Key 입력
+    google_api_key = st.text_input("Input your Google API Key", type="password")
+    if not google_api_key:
+        st.info("Please add your Google API key to continue.", icon="🗝️")
+        st.stop()
+    else:
+        st.write("key ok")
+
+
     url = st.text_input(
         "Write down a URL",
         placeholder="https://example.com",
     )
+
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash", 
+    temperature=0.1,
+    api_key=google_api_key,
+)
 
 
 if url:
