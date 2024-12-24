@@ -138,7 +138,7 @@ def load_website(url):
         chunk_size=1000,
         chunk_overlap=200,
     )
-    st.write(url)
+    # st.write(url)
     loader = SitemapLoader(
         url,
         filter_urls=[
