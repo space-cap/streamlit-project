@@ -143,13 +143,15 @@ def load_website(url):
         url,
         filter_urls=[
             r"^(.*\/ai-gateway\/).*",
+            r"^(.*\/vectorize\/).*",
+            r"^(.*\/workers-ai\/).*",
         ],
         parsing_function=parse_page,
     )
-    st.write(loader)
+    # st.write(loader)
     loader.requests_per_second = 2
     docs = loader.load_and_split(text_splitter=splitter)
-    st.write(docs)
+    # st.write(docs)
     vector_store = FAISS.from_documents(docs, GoogleGenerativeAIEmbeddings(model="models/embedding-001",google_api_key=google_api_key))
     return vector_store.as_retriever()
 
