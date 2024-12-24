@@ -159,6 +159,12 @@ def load_website(url):
 with st.sidebar:
   
     st.markdown("""
+    소스 코드
+                
+    https://github.com/space-cap/streamlit-project/blob/main/n04_SiteGPT_app.py
+    """)
+  
+    st.markdown("""
     구글 키 가지고 오기
                 
     https://aistudio.google.com/apikey
