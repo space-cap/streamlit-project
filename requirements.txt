@@ -8,3 +8,5 @@ langchain-openai
 langchain-google-genai
 faiss-cpu
 beautifulsoup4
+lxml
+requests
