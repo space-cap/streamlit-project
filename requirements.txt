@@ -10,3 +10,4 @@ faiss-cpu
 beautifulsoup4
 lxml
 requests
+yfinance
