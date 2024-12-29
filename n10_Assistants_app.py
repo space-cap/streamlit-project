@@ -105,7 +105,7 @@ with st.sidebar:
     st.markdown("""
     소스 코드
                 
-    https://github.com/space-cap/streamlit-project/blob/main/n04_SiteGPT_app.py
+    https://github.com/space-cap/streamlit-project/blob/main/n10_Assistants_app.py
     """)
   
     st.markdown("""
