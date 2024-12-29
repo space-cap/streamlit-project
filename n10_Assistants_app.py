@@ -136,7 +136,7 @@ if google_api_key:
 
     Use these functions to provide accurate and helpful information to users about companies and their stocks."""
 
-    # Function to generate a response
+
     def generate_response(user_input):
         response = model.generate_content([
             {"role": "system", "parts": [instructions]},
@@ -144,8 +144,7 @@ if google_api_key:
         ])
         return response.text
 
-    # Example usage
-    user_query = "Research about the XZ backdoor."
+    user_query = "What's the current financial state of Apple?"
     response = generate_response(user_query)
     st.write(response)
 
