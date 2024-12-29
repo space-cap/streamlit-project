@@ -127,22 +127,24 @@ if google_api_key:
 
     model = genai.GenerativeModel('gemini-1.5-flash')
 
-    instructions = """You are an Investor Assistant. You help users do research on publicly traded companies and you help users decide if they should buy the stock or not. You have access to the following functions:
-
-    1. get_ticker: Find the ticker symbol for a given company name.
-    2. get_income_statement: Get the income statement for a company using its ticker symbol.
-    3. get_balance_sheet: Get the balance sheet for a company using its ticker symbol.
-    4. get_daily_stock_performance: Get the stock performance for the last 100 days using a ticker symbol.
-
-    Use these functions to provide accurate and helpful information to users about companies and their stocks."""
-
-
     def generate_response(user_input):
-        response = model.generate_content([
-            {"role": "system", "parts": [instructions]},
-            {"role": "user", "parts": [user_input]}
-        ])
-        return response.text
+        try:
+            # 지시사항을 사용자 입력의 일부로 포함
+            full_prompt = f"""지시사항: 당신은 투자 조언자입니다. 공개 거래되는 회사에 대한 연구를 도와주고 사용자가 주식을 살지 말지 결정하는 데 도움을 줍니다. 다음 함수들을 사용할 수 있습니다:
+
+    1. get_ticker: 주어진 회사 이름의 티커 심볼을 찾습니다.
+    2. get_income_statement: 티커 심볼을 사용하여 회사의 손익계산서를 가져옵니다.
+    3. get_balance_sheet: 티커 심볼을 사용하여 회사의 대차대조표를 가져옵니다.
+    4. get_daily_stock_performance: 티커 심볼을 사용하여 지난 100일간의 주식 성과를 가져옵니다.
+
+    이 함수들을 사용하여 회사와 그들의 주식에 대한 정확하고 도움이 되는 정보를 제공하세요.
+
+    사용자 질문: {user_input}"""
+
+            response = model.generate_content(full_prompt)
+            return response.text
+        except Exception as e:
+            return f"오류가 발생했습니다: {str(e)}"
 
     user_query = "What's the current financial state of Apple?"
     response = generate_response(user_query)
