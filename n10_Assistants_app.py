@@ -122,32 +122,32 @@ with st.sidebar:
     else:
         st.write("key ok")
 
+if google_api_key:
+    genai.configure(api_key=google_api_key)
 
-genai.configure(api_key=google_api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
-model = genai.GenerativeModel('gemini-1.5-flash')
+    instructions = """You are an Investor Assistant. You help users do research on publicly traded companies and you help users decide if they should buy the stock or not. You have access to the following functions:
 
-instructions = """You are an Investor Assistant. You help users do research on publicly traded companies and you help users decide if they should buy the stock or not. You have access to the following functions:
+    1. get_ticker: Find the ticker symbol for a given company name.
+    2. get_income_statement: Get the income statement for a company using its ticker symbol.
+    3. get_balance_sheet: Get the balance sheet for a company using its ticker symbol.
+    4. get_daily_stock_performance: Get the stock performance for the last 100 days using a ticker symbol.
 
-1. get_ticker: Find the ticker symbol for a given company name.
-2. get_income_statement: Get the income statement for a company using its ticker symbol.
-3. get_balance_sheet: Get the balance sheet for a company using its ticker symbol.
-4. get_daily_stock_performance: Get the stock performance for the last 100 days using a ticker symbol.
+    Use these functions to provide accurate and helpful information to users about companies and their stocks."""
 
-Use these functions to provide accurate and helpful information to users about companies and their stocks."""
+    # Function to generate a response
+    def generate_response(user_input):
+        response = model.generate_content([
+            {"role": "system", "parts": [instructions]},
+            {"role": "user", "parts": [user_input]}
+        ])
+        return response.text
 
-# Function to generate a response
-def generate_response(user_input):
-    response = model.generate_content([
-        {"role": "system", "parts": [instructions]},
-        {"role": "user", "parts": [user_input]}
-    ])
-    return response.text
-
-# Example usage
-user_query = "Research about the XZ backdoor."
-response = generate_response(user_query)
-st.write(response)
+    # Example usage
+    user_query = "Research about the XZ backdoor."
+    response = generate_response(user_query)
+    st.write(response)
 
 
 
